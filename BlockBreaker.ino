@@ -28,54 +28,39 @@ bool alive = true;
 int block_w_sum = 0;
 int block_h_sum = 0;
 int const max_level = 15;
-int lvl_coll = 2;
-int const rows = 4;
-int block_w = (scr_w/lvl_coll)-(lvl_coll-1);
-int block_h = 20-(rows-1);
-int block_array[max_level][rows][2];
+int lvl_coll = 5;
+int const rows = 5;
+int block_w = scr_w/lvl_coll;
+int block_h = 10;
+int block_array[max_level][rows][3];
 
 void initial(){
   block_h_sum = 0;
-  for (int i = 0;i<=rows;i++){
+  for (int i = 0;i<rows;i++){
     block_w_sum = 0;
-    block_h_sum += block_h + 1;
-    for (int j = 0;j<=lvl_coll;j++){
-      block_array[i][j][0] = 0;
+    for (int j = 0;j<lvl_coll;j++){
       block_array[i][j][1] = block_w_sum;
       block_array[i][j][2] = block_h_sum;
       if (block_w_sum + block_w <= scr_w){
         block_w_sum += block_w + 1;
+        block_array[i][j][0] = 1;
       }
     }
+    block_h_sum += block_h + 1;
   }
 }
 
 void blocks(){
-  /*block_w_sum = 0;
-  while (block_w_sum + block_w <= scr_w){
-    block_w_sum += block_w + 1;
-  }
-  int half_dist = (scr_w - block_w_sum)/2;
-  block_w_sum = half_dist;
-  while (block_w_sum + block_w <= scr_w){
-    for (int iii=0;iii<rows;iii++){
-      TFTscreen.rect(block_w_sum,iii*block_h,block_w,block_h-1);
-    }
-    
-    block_w_sum += block_w + 1;
-  }*/
+  TFTscreen.fill(255,255,255);
+  TFTscreen.stroke(255,255,255);
 
-  TFTscreen.fill(0,0,0);
-  TFTscreen.stroke(0,0,0);
-
-  for (int i = 0;i<=lvl_coll;i++){
-    for (int j = 0;j<=rows;j++){
+  for (int i = 0;i<rows;i++){
+    for (int j = 0;j<lvl_coll;j++){
       if (block_array[i][j][0] == 1){
-        TFTscreen.rect(block_array[i][j][1],block_array[i][j][2],block_w,block_h-1);
+        TFTscreen.rect(block_array[i][j][1],block_array[i][j][2],block_w,block_h);
       }
     }
   } 
-
 }
 
 void win_lose(){
@@ -125,7 +110,7 @@ void drawball(){
 }
 
 void collisions(){
-  if ((ball_center_y >= (scr_h - pad_dist - pad_h)) && (ball_center_y <= (scr_h - pad_dist))){
+  if (((ball_center_y + ball_radius) >= (scr_h - pad_dist - pad_h)) && ((ball_center_y - ball_radius) <= (scr_h - pad_dist))){
     if ((ball_center_x >= pad_x) && (ball_center_x <= (pad_x + pad_w))){
       ball_vert_speed *=-1;
     }
@@ -145,8 +130,8 @@ void setup(){
 
 void loop(){
   initial();
+  blocks();
   while (alive){
-    blocks();
     win_lose();
     drawpad();
     drawball();
