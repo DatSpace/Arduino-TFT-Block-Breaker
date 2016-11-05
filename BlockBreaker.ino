@@ -139,13 +139,17 @@ void block_collisions(){
   for (int i = 0;i<rows;i++){
     for (int j = 0;j<lvl_coll;j++){
       if (block_array[i][j][0] == 1){
-        if (((ball_center_y + ball_radius) <= (block_array[i][j][2] + block_h)) && ((ball_center_y + ball_radius) >= (block_array[i][j][2]))){
-          if ((ball_center_x <= (block_array[i][j][1] + block_w)) && (ball_center_x >= block_array[i][j][1])){
-            ball_vert_speed *= -1;
+        if (abs(ball_center_y - (block_array[i][j][2] + block_h/2)) <= block_h/2 + ball_radius && 
+			abs(ball_center_x - (block_array[i][j][1] + block_w/2)) <= block_w/2 + ball_radius
+		   ){ //with block_h/2 being blockcenter_y and block_w/2 being blockcenter_x
+		   if(ball_center_y < block_array[i][j][2] || ball_center_y > block_array[i][j][2] + block_h){ //collision from up or down
+			   ball_vert_speed *= -1;
+		   }else{
+			   ball_hori_speed *= -1;
+		   }            
             block_array[i][j][0] = 0;
             draw_blocks();
             break;
-          }
         }
       }
     }
