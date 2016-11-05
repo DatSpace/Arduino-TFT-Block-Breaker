@@ -15,29 +15,37 @@ int const pad_dist = 8;
 int const pad_w = 30;
 int const pad_h = 5;
 int pad_x = scr_w/2;
-int ball_hori_speed = 5;
-int ball_vert_speed = 4;
-int const ball_radius = 4;
+int ball_hori_speed = 2;
+int ball_vert_speed = 2;
+int const ball_radius = 3;
 int ball_center_x = scr_w/2;
 int ball_center_y = scr_h/2;
 char ball_direction = 'd';
 int player_score = 0;
 char print_score[3];
-int const text_size = 2;
 bool alive = true;
-int block_w_sum = 0;
-int block_h_sum = 0;
 int const max_level = 15;
 int lvl_coll = 5;
 int const rows = 5;
-int block_w = scr_w/lvl_coll;
-int block_h = 10;
+int block_w = (scr_w/lvl_coll)-1;
+int const block_h = 10;
 int block_array[max_level][rows][3];
 
 void initial(){
+  int block_w_sum = 0;
+  int block_h_sum = 0;
+  int space = 0;
+  
+  for (int i = 0;i<lvl_coll;i++){
+    if (block_w_sum + block_w <= scr_w){
+        block_w_sum += block_w + 1;
+    }
+    space = (scr_w-block_w_sum)/2;
+  }
+  
   block_h_sum = 0;
-  for (int i = 0;i<rows;i++){
-    block_w_sum = 0;
+  for (int i = 0;i<rows;i++){ //Epireazete apo to row !!!
+    block_w_sum = space;
     for (int j = 0;j<lvl_coll;j++){
       block_array[i][j][1] = block_w_sum;
       block_array[i][j][2] = block_h_sum;
@@ -50,13 +58,16 @@ void initial(){
   }
 }
 
-void blocks(){
-  TFTscreen.fill(255,255,255);
-  TFTscreen.stroke(255,255,255);
-
+void draw_blocks(){
   for (int i = 0;i<rows;i++){
     for (int j = 0;j<lvl_coll;j++){
       if (block_array[i][j][0] == 1){
+        TFTscreen.fill(255,255,255);
+        TFTscreen.stroke(255,255,255);
+        TFTscreen.rect(block_array[i][j][1],block_array[i][j][2],block_w,block_h);
+      }else if (block_array[i][j][0] == 0){
+        TFTscreen.fill(0,0,0);
+        TFTscreen.stroke(0,0,0);
         TFTscreen.rect(block_array[i][j][1],block_array[i][j][2],block_w,block_h);
       }
     }
@@ -109,7 +120,7 @@ void drawball(){
   TFTscreen.circle(ball_center_x,ball_center_y,ball_radius);
 }
 
-void collisions(){
+void main_collisions(){
   if (((ball_center_y + ball_radius) >= (scr_h - pad_dist - pad_h)) && ((ball_center_y - ball_radius) <= (scr_h - pad_dist))){
     if ((ball_center_x >= pad_x) && (ball_center_x <= (pad_x + pad_w))){
       ball_vert_speed *=-1;
@@ -123,6 +134,24 @@ void collisions(){
   }
 }
 
+
+void block_collisions(){
+  for (int i = 0;i<rows;i++){
+    for (int j = 0;j<lvl_coll;j++){
+      if (block_array[i][j][0] == 1){
+        if (((ball_center_y + ball_radius) <= (block_array[i][j][2] + block_h)) && ((ball_center_y + ball_radius) >= (block_array[i][j][2]))){
+          if ((ball_center_x <= (block_array[i][j][1] + block_w)) && (ball_center_x >= block_array[i][j][1])){
+            ball_vert_speed *= -1;
+            block_array[i][j][0] = 0;
+            draw_blocks();
+            break;
+          }
+        }
+      }
+    }
+  }
+}
+
 void setup(){
   TFTscreen.begin();
   TFTscreen.background(0,0,0);
@@ -130,11 +159,12 @@ void setup(){
 
 void loop(){
   initial();
-  blocks();
+  
   while (alive){
     win_lose();
     drawpad();
     drawball();
-    collisions();
+    main_collisions();
+    block_collisions();
   }
 }
