@@ -18,15 +18,16 @@ int pad_x = scr_w/2;
 int ball_hori_speed = 0;
 int ball_vert_speed = -2;
 int const ball_radius = 3;
-int ball_center_x = scr_w/2;
-int ball_center_y = scr_h/2;
+int ball_center_x;
+int ball_center_y;
 int player_score = 0;
-char print_score[3];
-bool alive = true;
+bool again;
+int lifes = 3;
+bool complete = false;
 int const max_level = 15;
-int lvl_coll = 5;
+int lvl_coll = 1;
 int const rows = 5;
-int block_w = (scr_w/lvl_coll)-1;
+int block_w;
 int const block_h = 10;
 int block_array[max_level][rows][3];
 
@@ -34,6 +35,10 @@ void initial(){
   int block_w_sum = 0;
   int block_h_sum = 0;
   int space = 0;
+  again = true;
+  ball_center_x = scr_w/2;
+  ball_center_y = scr_h/2;
+  block_w = (scr_w/lvl_coll)-1;
   
   for (int i = 0;i<lvl_coll;i++){
     if (block_w_sum + block_w <= scr_w){
@@ -42,7 +47,6 @@ void initial(){
     space = (scr_w-block_w_sum)/2;
   }
   
-  block_h_sum = 0;
   for (int i = 0;i<rows;i++){ //NEED TO FIX SOMETHING WITH ROWS...
     block_w_sum = space;
     for (int j = 0;j<lvl_coll;j++){
@@ -73,11 +77,73 @@ void draw_blocks(){
   } 
 }
 
-void win_lose(){
-  
+void win(){
+  if (complete == true){
+    TFTscreen.background(0,0,0);
+    TFTscreen.stroke(0,255,0);
+    TFTscreen.textSize(3);
+    TFTscreen.text("Good Job!",10,40);
+    delay(1000);
+    
+    if (lvl_coll < max_level){
+      TFTscreen.stroke(255,255,255);
+      TFTscreen.textSize(2);
+      TFTscreen.text("Next Level:",5,80);
+      char lvl[3];
+      lvl_coll++;
+      String(lvl_coll).toCharArray(lvl,3);
+      TFTscreen.text(lvl,135,80);
+    }else{
+      TFTscreen.background(0,0,0);
+      TFTscreen.stroke(0,255,0);
+      TFTscreen.textSize(3);
+      TFTscreen.text("YOU WON!",10,40);
+      delay(1000);
+      TFTscreen.stroke(255,255,255);
+      TFTscreen.textSize(2);
+      TFTscreen.text("Your Score:",5,80);
+      char score[4];
+      String(player_score).toCharArray(score,4);
+      TFTscreen.text(score,120,80);
+    }
+    again = false;
+    delay(2000);
+    TFTscreen.background(0,0,0);
+  }
 }
 
-void drawpad(){
+void lose(){
+  if (lifes == 0){
+    TFTscreen.background(0,0,0);
+    TFTscreen.stroke(255,0,0);
+    TFTscreen.textSize(3);
+    TFTscreen.text("GAME OVER",0,40);
+    delay(1000);
+    TFTscreen.stroke(255,255,255);
+    TFTscreen.textSize(2);
+    TFTscreen.text("Restarting:",5,80);
+    for (int i = 10;i >= 0;i--){
+      char timmer[3];
+      String(i).toCharArray(timmer,3);
+      if (i <= 3){
+        TFTscreen.stroke(255,0,0);
+      }else{
+        TFTscreen.stroke(0,255,0);
+      }
+      
+      TFTscreen.text(timmer,135,80);
+      delay(1000);
+      TFTscreen.stroke(0,0,0);
+      TFTscreen.text(timmer,135,80);
+    }
+    again = true;
+    lifes = 3;
+    player_score = 0;
+    TFTscreen.background(0,0,0);
+  }
+}
+
+void draw_pad(){
   TFTscreen.fill(0,0,0);
   TFTscreen.stroke(0,0,0);
 
@@ -91,7 +157,7 @@ void drawpad(){
   TFTscreen.rect(pad_x,scr_h-pad_dist-pad_h,pad_w,pad_h);
 }
 
-void drawball(){
+void draw_ball(){
 
   TFTscreen.fill(0,0,0);
   TFTscreen.stroke(0,0,0);
@@ -131,24 +197,29 @@ void main_collisions(){
   if ((ball_center_y - ball_radius) <= 0){
     ball_vert_speed *= -1;
   }
+  if ((ball_center_y + ball_radius) >= scr_h){
+    lifes -= 1;
+    again = false;
+  }
 }
 
 
 void block_collisions(){
+  complete = true;
   for (int i = 0;i<rows;i++){
     for (int j = 0;j<lvl_coll;j++){
       if (block_array[i][j][0] == 1){
-        if (((ball_center_y + ball_radius) <= (block_array[i][j][2] + block_h)) && ((ball_center_y + ball_radius) >= (block_array[i][j][2]))){
-          if ((ball_center_x <= (block_array[i][j][1] + block_w)) && (ball_center_x >= block_array[i][j][1])){
-            if ((ball_center_x + ball_radius <= block_array[i][j][1]) || (ball_center_x - ball_radius >= block_array[i][j][1] + block_w)){
-              ball_hori_speed *= -1;
-            }else {
-              ball_vert_speed *= -1;
-            }
-            block_array[i][j][0] = 0;
-            draw_blocks();
-            break;
-          }
+        complete = false;
+        if ((abs(ball_center_y - (block_array[i][j][2] + block_h/2)) <= (block_h/2 + ball_radius)) && (abs(ball_center_x - (block_array[i][j][1] + block_w/2)) <= (block_w/2 + ball_radius))){
+          if ((ball_center_y < block_array[i][j][2]) || (ball_center_y > (block_array[i][j][2] + block_h))){
+            ball_vert_speed *= -1;
+          }else{
+            ball_hori_speed *= -1;
+          }  
+          block_array[i][j][0] = 0;
+          player_score += lvl_coll;
+          draw_blocks();
+          break;
         }
       }
     }
@@ -161,14 +232,28 @@ void setup(){
 }
 
 void loop(){
+  
   initial();
+  lose();
+
+  if (lifes == 3){
+      TFTscreen.textSize(3);
+  
+      TFTscreen.stroke(255,255,255);
+      TFTscreen.text("READY?!",25,50);
+      delay(2000);
+      TFTscreen.stroke(0,0,0);
+      TFTscreen.text("READY?!",25,50);
+  }
+  
   draw_blocks();
-  while (alive){
-    win_lose();
-    drawpad();
-    drawball();
+  delay(1000);
+  while (again){
+    draw_ball();
+    draw_pad();
     main_collisions();
     block_collisions();
+    win();
     delay(20);
   }
 }
