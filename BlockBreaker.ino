@@ -121,7 +121,13 @@ void lose(){
     delay(1000);
     TFTscreen.stroke(255,255,255);
     TFTscreen.textSize(2);
-    TFTscreen.text("Restarting:",5,80);
+    TFTscreen.text("Restarting:",0,80);
+    
+    TFTscreen.text("Score:",0,0);
+    char score[4];
+    String(player_score).toCharArray(score,4);
+    TFTscreen.stroke(0,255,0);
+    TFTscreen.text(score,90,0);
     for (int i = 10;i >= 0;i--){
       char timmer[3];
       String(i).toCharArray(timmer,3);
@@ -131,11 +137,13 @@ void lose(){
         TFTscreen.stroke(0,255,0);
       }
       
-      TFTscreen.text(timmer,135,80);
+      TFTscreen.text(timmer,138,80);
       delay(1000);
       TFTscreen.stroke(0,0,0);
-      TFTscreen.text(timmer,135,80);
+      TFTscreen.text(timmer,138,80);
     }
+    TFTscreen.stroke(0,0,0);
+    TFTscreen.text(score,120,80);
     again = true;
     lifes = 3;
     player_score = 0;
@@ -144,17 +152,18 @@ void lose(){
 }
 
 void draw_pad(){
-  TFTscreen.fill(0,0,0);
-  TFTscreen.stroke(0,0,0);
-
-  TFTscreen.rect(pad_x,scr_h-pad_dist-pad_h,pad_w,pad_h);
-
+  int pad_x_old = pad_x;
   pad_x = map(analogRead(A0),0,1023,0,scr_w-pad_w);
-  
-  TFTscreen.fill(255,255,255);
-  TFTscreen.stroke(255,255,255);
 
-  TFTscreen.rect(pad_x,scr_h-pad_dist-pad_h,pad_w,pad_h);
+  if (pad_x != pad_x_old){
+    TFTscreen.fill(0,0,0);
+    TFTscreen.stroke(0,0,0);
+    TFTscreen.rect(pad_x_old,scr_h-pad_dist-pad_h,pad_w,pad_h);
+    
+    TFTscreen.fill(255,255,255);
+    TFTscreen.stroke(255,255,255);
+    TFTscreen.rect(pad_x,scr_h-pad_dist-pad_h,pad_w,pad_h);
+  }
 }
 
 void draw_ball(){
@@ -198,6 +207,10 @@ void main_collisions(){
     ball_vert_speed *= -1;
   }
   if ((ball_center_y + ball_radius) >= scr_h){
+    char print_lifes[2];
+    String(lifes).toCharArray(print_lifes,2);
+    TFTscreen.stroke(0,0,0);
+    TFTscreen.text(print_lifes,150,100);
     lifes -= 1;
     again = false;
   }
@@ -248,6 +261,15 @@ void loop(){
   
   draw_blocks();
   delay(1000);
+
+  TFTscreen.textSize(1);
+  TFTscreen.stroke(255,255,255);
+  TFTscreen.text("Lifes:",100,100);
+  char print_lifes[2];
+  String(lifes).toCharArray(print_lifes,2);
+  TFTscreen.stroke(0,255,0);
+  TFTscreen.text(print_lifes,150,100);
+  
   while (again){
     draw_ball();
     draw_pad();
