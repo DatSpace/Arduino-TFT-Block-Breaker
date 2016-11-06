@@ -15,12 +15,11 @@ int const pad_dist = 8;
 int const pad_w = 30;
 int const pad_h = 5;
 int pad_x = scr_w/2;
-int ball_hori_speed = 2;
-int ball_vert_speed = 2;
+int ball_hori_speed = 0;
+int ball_vert_speed = -2;
 int const ball_radius = 3;
 int ball_center_x = scr_w/2;
 int ball_center_y = scr_h/2;
-char ball_direction = 'd';
 int player_score = 0;
 char print_score[3];
 bool alive = true;
@@ -44,7 +43,7 @@ void initial(){
   }
   
   block_h_sum = 0;
-  for (int i = 0;i<rows;i++){ //Epireazete apo to row !!!
+  for (int i = 0;i<rows;i++){ //NEED TO FIX SOMETHING WITH ROWS...
     block_w_sum = space;
     for (int j = 0;j<lvl_coll;j++){
       block_array[i][j][1] = block_w_sum;
@@ -94,25 +93,13 @@ void drawpad(){
 
 void drawball(){
 
-  if (!alive){
-    ball_direction = 'd';
-  }
-
   TFTscreen.fill(0,0,0);
   TFTscreen.stroke(0,0,0);
 
   TFTscreen.circle(ball_center_x,ball_center_y,ball_radius);
 
-  if (ball_direction == 'u'){
-    ball_center_y -= ball_vert_speed;
-  }else if (ball_direction == 'd'){
-    ball_center_y += ball_vert_speed;
-  }
-  if (ball_direction == 'l'){
-    ball_center_x -= ball_hori_speed;
-  }else if (ball_direction == 'r'){
-    ball_center_y += ball_hori_speed;
-  } 
+  ball_center_y -= ball_vert_speed;
+  ball_center_x -= ball_hori_speed;
 
   TFTscreen.fill(255,255,255);
   TFTscreen.stroke(255,255,255);
@@ -123,7 +110,19 @@ void drawball(){
 void main_collisions(){
   if (((ball_center_y + ball_radius) >= (scr_h - pad_dist - pad_h)) && ((ball_center_y - ball_radius) <= (scr_h - pad_dist))){
     if ((ball_center_x >= pad_x) && (ball_center_x <= (pad_x + pad_w))){
-      ball_vert_speed *=-1;
+      if ((ball_center_x < (pad_x + (pad_w/6))) || (ball_center_x > (pad_x + pad_w - (pad_w/6)))){
+        ball_hori_speed = 3;
+      }else if ((ball_center_x < (pad_x + (pad_w/4))) || (ball_center_x > (pad_x + pad_w - (pad_w/4)))){
+        ball_hori_speed = 2;
+      }else if ((ball_center_x < (pad_x + (pad_w/2))) || (ball_center_x > (pad_x + pad_w - (pad_w/2)))){
+        ball_hori_speed = 1;
+      }
+      if ((ball_center_x < pad_x + pad_w/2) && (ball_hori_speed < 0)){
+        ball_hori_speed *= -1;        
+      }else if ((ball_center_x > pad_x + pad_w/2) && (ball_hori_speed > 0)){
+        ball_hori_speed *= -1;
+      }
+      ball_vert_speed *= -1;
     }
   }
   if (((ball_center_x + ball_radius) >= scr_w)  || (ball_center_x - ball_radius) <= 0){
@@ -141,7 +140,11 @@ void block_collisions(){
       if (block_array[i][j][0] == 1){
         if (((ball_center_y + ball_radius) <= (block_array[i][j][2] + block_h)) && ((ball_center_y + ball_radius) >= (block_array[i][j][2]))){
           if ((ball_center_x <= (block_array[i][j][1] + block_w)) && (ball_center_x >= block_array[i][j][1])){
-            ball_vert_speed *= -1;
+            if ((ball_center_x + ball_radius <= block_array[i][j][1]) || (ball_center_x - ball_radius >= block_array[i][j][1] + block_w)){
+              ball_hori_speed *= -1;
+            }else {
+              ball_vert_speed *= -1;
+            }
             block_array[i][j][0] = 0;
             draw_blocks();
             break;
@@ -159,12 +162,13 @@ void setup(){
 
 void loop(){
   initial();
-  
+  draw_blocks();
   while (alive){
     win_lose();
     drawpad();
     drawball();
     main_collisions();
     block_collisions();
+    delay(20);
   }
 }
