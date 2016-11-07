@@ -218,25 +218,27 @@ void main_collisions(){
 
 
 void block_collisions(){
-  complete = true;
-  for (int i = 0;i<rows;i++){
-    for (int j = 0;j<lvl_coll;j++){
-      if (block_array[i][j][0] == 1){
-        complete = false;
-        if ((abs(ball_center_y - (block_array[i][j][2] + block_h/2)) <= (block_h/2 + ball_radius)) && (abs(ball_center_x - (block_array[i][j][1] + block_w/2)) <= (block_w/2 + ball_radius))){
-          if ((ball_center_y < block_array[i][j][2]) || (ball_center_y > (block_array[i][j][2] + block_h))){
-            ball_vert_speed *= -1;
-          }else{
-            ball_hori_speed *= -1;
-          }  
-          block_array[i][j][0] = 0;
-          player_score += lvl_coll;
-          draw_blocks();
-          break;
-        }
-      }
-    }
-  }
+  if(rows*block_h+(rows-1) <= ball_center_y -ball_radius){//check for block collision only when the ball is in the "possible collisions" area
+	  complete = true;
+	  for (int i = 0;i<rows;i++){
+		for (int j = 0;j<lvl_coll;j++){
+		  if (block_array[i][j][0] == 1){
+			complete = false;
+			if ((abs(ball_center_y - (block_array[i][j][2] + block_h/2)) <= (block_h/2 + ball_radius)) && (abs(ball_center_x - (block_array[i][j][1] + block_w/2)) <= (block_w/2 + ball_radius))){
+			  if ((ball_center_y < block_array[i][j][2]) || (ball_center_y > (block_array[i][j][2] + block_h))){
+				ball_vert_speed *= -1;
+			  }else{
+				ball_hori_speed *= -1;
+			  }  
+			  block_array[i][j][0] = 0;
+			  player_score += lvl_coll;
+			  draw_blocks();
+			  break;
+			}
+		  }
+		}
+	  }
+	}
 }
 
 void setup(){
